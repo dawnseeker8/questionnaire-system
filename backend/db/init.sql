@@ -1,0 +1,52 @@
+CREATE TABLE Form (
+    ID SERIAL PRIMARY KEY,
+    Title VARCHAR(255) NOT NULL,
+    Description TEXT,
+    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Section (
+    ID SERIAL PRIMARY KEY,
+    FormID INT NOT NULL,
+    Title VARCHAR(255) NOT NULL,
+    Description TEXT,
+    OrderIndex INT DEFAULT 0,
+    TotalScore FLOAT DEFAULT 0,
+    FOREIGN KEY (FormID) REFERENCES Form(ID)
+);
+
+CREATE TABLE Question (
+    ID SERIAL PRIMARY KEY,
+    SectionID INT NOT NULL,
+    Type VARCHAR(50) NOT NULL CHECK (Type IN ('radio', 'checkbox', 'text')),
+    Text TEXT NOT NULL,
+    IsRequired BOOLEAN DEFAULT FALSE,
+    OrderIndex INT DEFAULT 0,
+    FOREIGN KEY (SectionID) REFERENCES Section(ID)
+);
+
+CREATE TABLE QuestionOption (
+    ID SERIAL PRIMARY KEY,
+    QuestionID INT NOT NULL,
+    Text VARCHAR(255) NOT NULL,
+    Score FLOAT DEFAULT 0,
+    FOREIGN KEY (QuestionID) REFERENCES Question(ID)
+);
+
+CREATE TABLE Response (
+    ID SERIAL PRIMARY KEY,
+    FormID INT NOT NULL,
+    SubmittedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (FormID) REFERENCES Form(ID)
+);
+
+CREATE TABLE Answer (
+    ID SERIAL PRIMARY KEY,
+    ResponseID INT NOT NULL,
+    QuestionID INT NOT NULL,
+    Content TEXT,
+    Score FLOAT DEFAULT 0,
+    FOREIGN KEY (ResponseID) REFERENCES Response(ID),
+    FOREIGN KEY (QuestionID) REFERENCES Question(ID)
+);
