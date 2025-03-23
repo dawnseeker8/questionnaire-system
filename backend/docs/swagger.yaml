@@ -1,0 +1,490 @@
+definitions:
+  dto.FormCreateRequest:
+    properties:
+      description:
+        type: string
+      title:
+        type: string
+    required:
+    - title
+    type: object
+  dto.FormUpdateRequest:
+    properties:
+      description:
+        type: string
+      title:
+        type: string
+    required:
+    - title
+    type: object
+  model.Answer:
+    properties:
+      content:
+        description: Text content of the answer
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      question_id:
+        type: integer
+      response_id:
+        type: integer
+      score:
+        type: number
+      updated_at:
+        type: string
+    type: object
+  model.Form:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      responses:
+        items:
+          $ref: '#/definitions/model.Response'
+        type: array
+      sections:
+        items:
+          $ref: '#/definitions/model.Section'
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.Question:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      is_required:
+        type: boolean
+      options:
+        items:
+          $ref: '#/definitions/model.QuestionOption'
+        type: array
+      order_index:
+        type: integer
+      section_id:
+        type: integer
+      text:
+        type: string
+      type:
+        description: radio, checkbox, text
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.QuestionOption:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      question_id:
+        type: integer
+      score:
+        type: number
+      text:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.Response:
+    properties:
+      answers:
+        items:
+          $ref: '#/definitions/model.Answer'
+        type: array
+      created_at:
+        type: string
+      form_id:
+        type: integer
+      id:
+        type: integer
+      submitted_at:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.Section:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      form_id:
+        type: integer
+      id:
+        type: integer
+      order_index:
+        type: integer
+      questions:
+        items:
+          $ref: '#/definitions/model.Question'
+        type: array
+      title:
+        type: string
+      total_score:
+        type: number
+      updated_at:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/forms:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all questionnaire forms
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Form'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all forms
+      tags:
+      - forms
+    post:
+      consumes:
+      - application/json
+      description: Create a new questionnaire form
+      parameters:
+      - description: Form data
+        in: body
+        name: form
+        required: true
+        schema:
+          $ref: '#/definitions/dto.FormCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Form'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new form
+      tags:
+      - forms
+  /api/v1/forms/{formId}/sections:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all sections for a specific form
+      parameters:
+      - description: Form ID
+        in: path
+        name: formId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.Section'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all sections of a form
+      tags:
+      - sections
+    post:
+      consumes:
+      - application/json
+      description: Create a new section for a specific form
+      parameters:
+      - description: Form ID
+        in: path
+        name: formId
+        required: true
+        type: integer
+      - description: Section data
+        in: body
+        name: section
+        required: true
+        schema:
+          $ref: '#/definitions/model.Section'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.Section'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new section
+      tags:
+      - sections
+  /api/v1/forms/{formId}/sections/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a section by its ID for a specific form
+      parameters:
+      - description: Form ID
+        in: path
+        name: formId
+        required: true
+        type: integer
+      - description: Section ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete a section
+      tags:
+      - sections
+    get:
+      consumes:
+      - application/json
+      description: Get a section by its ID for a specific form
+      parameters:
+      - description: Form ID
+        in: path
+        name: formId
+        required: true
+        type: integer
+      - description: Section ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Section'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get a section by ID
+      tags:
+      - sections
+    put:
+      consumes:
+      - application/json
+      description: Update a section by its ID for a specific form
+      parameters:
+      - description: Form ID
+        in: path
+        name: formId
+        required: true
+        type: integer
+      - description: Section ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Section data
+        in: body
+        name: section
+        required: true
+        schema:
+          $ref: '#/definitions/model.Section'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Section'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update a section
+      tags:
+      - sections
+  /api/v1/forms/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a questionnaire form by its ID
+      parameters:
+      - description: Form ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete a form
+      tags:
+      - forms
+    get:
+      consumes:
+      - application/json
+      description: Get a questionnaire form by its ID
+      parameters:
+      - description: Form ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Form'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get a form by ID
+      tags:
+      - forms
+    put:
+      consumes:
+      - application/json
+      description: Update a questionnaire form by its ID
+      parameters:
+      - description: Form ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Form data
+        in: body
+        name: form
+        required: true
+        schema:
+          $ref: '#/definitions/dto.FormUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Form'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update a form
+      tags:
+      - forms
+  /api/v1/health:
+    get:
+      consumes:
+      - application/json
+      description: Check if the API service is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Health check endpoint
+      tags:
+      - health
+swagger: "2.0"

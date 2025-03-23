@@ -7,10 +7,19 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/cloudwego/hertz/pkg/protocol/consts"
+	"github.com/dawnseeker8/questionnaire-system/app/dto"
 	"github.com/dawnseeker8/questionnaire-system/app/model"
 )
 
-// ListForms handles GET /api/v1/forms
+// ListForms godoc
+// @Summary List all forms
+// @Description Get a list of all questionnaire forms
+// @Tags forms
+// @Accept json
+// @Produce json
+// @Success 200 {array} model.Form
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/forms [get]
 func ListForms(ctx context.Context, c *app.RequestContext) {
 	forms, err := formService.GetAllForms()
 	if err != nil {
@@ -24,17 +33,33 @@ func ListForms(ctx context.Context, c *app.RequestContext) {
 	c.JSON(consts.StatusOK, forms)
 }
 
-// CreateForm handles POST /api/v1/forms
+// CreateForm godoc
+// @Summary Create a new form
+// @Description Create a new questionnaire form
+// @Tags forms
+// @Accept json
+// @Produce json
+// @Param form body dto.FormCreateRequest true "Form data"
+// @Success 201 {object} model.Form
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/forms [post]
 func CreateForm(ctx context.Context, c *app.RequestContext) {
-	var form model.Form
-	if err := c.BindAndValidate(&form); err != nil {
+	var formRequest dto.FormCreateRequest
+	if err := c.BindAndValidate(&formRequest); err != nil {
 		c.JSON(consts.StatusBadRequest, map[string]interface{}{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	if err := formService.CreateForm(&form); err != nil {
+	// Create a new form model from the request DTO
+	form := &model.Form{
+		Title:       formRequest.Title,
+		Description: formRequest.Description,
+	}
+
+	if err := formService.CreateForm(form); err != nil {
 		hlog.Error("Failed to create form:", err)
 		c.JSON(consts.StatusInternalServerError, map[string]interface{}{
 			"error": "Failed to create form",
@@ -45,7 +70,17 @@ func CreateForm(ctx context.Context, c *app.RequestContext) {
 	c.JSON(consts.StatusCreated, form)
 }
 
-// GetForm handles GET /api/v1/forms/:id
+// GetForm godoc
+// @Summary Get a form by ID
+// @Description Get a questionnaire form by its ID
+// @Tags forms
+// @Accept json
+// @Produce json
+// @Param id path int true "Form ID"
+// @Success 200 {object} model.Form
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Router /api/v1/forms/{id} [get]
 func GetForm(ctx context.Context, c *app.RequestContext) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
@@ -68,7 +103,18 @@ func GetForm(ctx context.Context, c *app.RequestContext) {
 	c.JSON(consts.StatusOK, form)
 }
 
-// UpdateForm handles PUT /api/v1/forms/:id
+// UpdateForm godoc
+// @Summary Update a form
+// @Description Update a questionnaire form by its ID
+// @Tags forms
+// @Accept json
+// @Produce json
+// @Param id path int true "Form ID"
+// @Param form body dto.FormUpdateRequest true "Form data"
+// @Success 200 {object} model.Form
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/forms/{id} [put]
 func UpdateForm(ctx context.Context, c *app.RequestContext) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
@@ -79,16 +125,29 @@ func UpdateForm(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	var form model.Form
-	if err := c.BindAndValidate(&form); err != nil {
+	var formRequest dto.FormUpdateRequest
+	if err := c.BindAndValidate(&formRequest); err != nil {
 		c.JSON(consts.StatusBadRequest, map[string]interface{}{
 			"error": err.Error(),
 		})
 		return
 	}
 
-	form.ID = uint(id)
-	if err := formService.UpdateForm(&form); err != nil {
+	// Get the existing form first
+	existingForm, err := formService.GetFormByID(uint(id))
+	if err != nil {
+		hlog.Error("Failed to get form for update:", err)
+		c.JSON(consts.StatusNotFound, map[string]interface{}{
+			"error": "Form not found",
+		})
+		return
+	}
+
+	// Update only the fields that should be updated
+	existingForm.Title = formRequest.Title
+	existingForm.Description = formRequest.Description
+
+	if err := formService.UpdateForm(existingForm); err != nil {
 		hlog.Error("Failed to update form:", err)
 		c.JSON(consts.StatusInternalServerError, map[string]interface{}{
 			"error": "Failed to update form",
@@ -96,10 +155,20 @@ func UpdateForm(ctx context.Context, c *app.RequestContext) {
 		return
 	}
 
-	c.JSON(consts.StatusOK, form)
+	c.JSON(consts.StatusOK, existingForm)
 }
 
-// DeleteForm handles DELETE /api/v1/forms/:id
+// DeleteForm godoc
+// @Summary Delete a form
+// @Description Delete a questionnaire form by its ID
+// @Tags forms
+// @Accept json
+// @Produce json
+// @Param id path int true "Form ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/v1/forms/{id} [delete]
 func DeleteForm(ctx context.Context, c *app.RequestContext) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)

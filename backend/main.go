@@ -7,8 +7,11 @@ import (
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/dawnseeker8/questionnaire-system/app/model"
 	"github.com/dawnseeker8/questionnaire-system/config"
+	_ "github.com/dawnseeker8/questionnaire-system/docs" // Import swagger docs
 	"github.com/dawnseeker8/questionnaire-system/router"
 	hertzlogger "github.com/hertz-contrib/logger/zap"
+	"github.com/hertz-contrib/swagger"
+	swaggerFiles "github.com/swaggo/files"
 )
 
 func main() {
@@ -34,6 +37,11 @@ func main() {
 	h := server.Default(
 		server.WithHostPorts(fmt.Sprintf(":%d", cfg.Server.Port)),
 	)
+
+	// Setup Swagger
+	// Note: docs are imported in the import section with _ "github.com/dawnseeker8/questionnaire-system/docs"
+	h.GET("/swagger/*any", swagger.WrapHandler(swaggerFiles.Handler))
+	hlog.Infof("Swagger UI available at: http://localhost:%d/swagger/index.html", cfg.Server.Port)
 
 	// Register routes
 	router.RegisterRoutes(h)
